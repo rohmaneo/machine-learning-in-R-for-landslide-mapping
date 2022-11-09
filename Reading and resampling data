@@ -1,0 +1,110 @@
+setwd("C:/Thesis")
+getwd()
+
+##set the personal library
+.libPaths("C:/Thesis/MyLibrary")
+.libPaths() ## Press tab for options
+
+#read package
+library(sp)
+library(raster)
+library(tree)
+library(rgeos)
+library(rgdal)
+library(maptools)
+library(gplots)
+library(ROCR)
+
+# READ TRAINING DATA
+
+# load all the data
+Elevation = raster("DEM.tif")  
+Wetness= raster("Wetness1.tif") 
+Slope= raster("Slope.tif")
+Distance= raster("Distance.tif") 
+Faultdistance= raster("Faultdistance.tif")
+Curvature= raster("Curvature.tif")
+Angle= raster("Angle.tif")
+Aspect= raster("Aspect.tif")
+Geology= raster("Geologynew.tif")
+Training_LR= raster("NewTrain.tif") 
+Train_LR= raster("Newclass.tif")
+
+# if you have diffrent extent, then try to Resample them 
+Elevation_re <- resample(Elevation,Training_LR, resample='bilinear') 
+Wetness_re<- resample(Wetness,Training_LR, resample='bilinear')
+Slope_re<- resample(Slope,Training_LR, resample='bilinear')
+Distance_re<- resample(Distance,Training_LR, resample='bilinear')
+Faultdis_re<- resample(Faultdistance,Training_LR, resample='bilinear')
+Curvature_re<- resample(Curvature,Training_LR, resample='bilinear')
+Angle_re<- resample(Angle,Training_LR, resample='bilinear')
+Aspect_re<- resample(Aspect,Training_LR, resample='bilinear')
+Geology_re<- resample(Geology,Training_LR, resample='bilinear')
+
+# create resampled Rasters
+dir.create("C:/Thesis/Resampled data")  
+writeRaster(Elevation_re,"Resampled data/Elevation.tif", overwrite=TRUE)
+writeRaster(Slope_re,"Resampled data/Slope.tif", overwrite=TRUE)
+writeRaster(Curvature_re,"Resampled data/Curvature.tif", overwrite=TRUE) # working!!
+writeRaster(Wetness_re,"Resampled data/Wetness.tif", overwrite=TRUE)
+writeRaster(Angle_re,"Resampled data/Angle.tif", overwrite=TRUE)
+writeRaster(Aspect_re,"Resampled data/Aspect.tif", overwrite=TRUE)
+writeRaster(Distance_re,"Resampled data/Distance.tif", overwrite=TRUE)
+writeRaster(Faultdist_re,"Resampled data/Faultdistance.tif", overwrite=TRUE)
+writeRaster(Geology_re,"Resampled data/Geology.tif", overwrite=TRUE)
+writeRaster(Training_LR,"Resampled data/Training_LR.tif", overwrite=TRUE)
+
+#Reading data
+list.files("C:/Thesis/Resampled data")
+
+## stack multiple raster files
+Rasters_List= list.files(path = "C:/Thesis/Resampled data",pattern = "tif$", full.names = TRUE)
+Rasters_stacked=stack(Rasters_List)
+
+##that need to be removed or replaced by -9999###
+value_table=getValues(Rasters_stacked)
+value_table=na.omit(value_table)
+value_table=as.data.frame(value_table)
+
+Training_data=value_table
+colnames(Training_data)[colnames(Training_data) == 'Training_LR'] <- 'Training_points' #chage column name
+Training_data=as.data.frame(Training_data)
+
+##READ TESTING DATA
+
+# if you have diffrent extent, then try to Resample them 
+Elevation_te <- resample(Elevation,Train_LR, resample='bilinear') 
+Wetness_te<- resample(Wetness,Train_LR, resample='bilinear')
+Slope_te<- resample(Slope,Train_LR, resample='bilinear')
+Distance_te<- resample(Distance,Train_LR, resample='bilinear')
+Faultdis_te<- resample(Faultdistance,Train_LR, resample='bilinear')
+Curvature_te<- resample(Curvature,Train_LR, resample='bilinear')
+Angle_te<- resample(Angle,Train_LR, resample='bilinear')
+Aspect_te<- resample(Aspect,Train_LR, resample='bilinear')
+Geology_te<- resample(Geology,Train_LR, resample='bilinear')
+
+dir.create("C:/Thesis/Test data")  
+writeRaster(Elevation_te,"Test data/Elevation.tif", overwrite=TRUE)
+writeRaster(Slope_te,"Test data/Slope.tif", overwrite=TRUE)
+writeRaster(Curvature_te,"Test data/Curvature.tif", overwrite=TRUE) # working!!
+writeRaster(Wetness_te,"Test data/Wetness.tif", overwrite=TRUE)
+writeRaster(Angle_te,"Test data/Angle.tif", overwrite=TRUE)
+writeRaster(Aspect_te,"Test data/Aspect.tif", overwrite=TRUE)
+writeRaster(Distance_te,"Test data/Distance.tif", overwrite=TRUE)
+writeRaster(Faultdist_te,"Test data/Faultdistance.tif", overwrite=TRUE)
+writeRaster(Geology_te,"Test data/Geology.tif", overwrite=TRUE)
+writeRaster(Train_LR,"Test data/Testing_points.tif", overwrite=TRUE)
+
+
+list.files("C:/Thesis/Test data")
+Rasters_test= list.files(path = "C:/Thesis/Test data",pattern = "tif$", full.names = TRUE)
+Rasters_tested=stack(Rasters_test)
+
+value_test=getValues(Rasters_tested)
+value_test=na.omit(value_test)
+value_test=as.data.frame(value_test)
+
+Testing_data=value_test
+colnames(Testing_data)[colnames(Testing_data) == 'Train_LR'] <- 'Testing_points' #chage column name
+
+Testing_data=as.data.frame(Testing_data)
