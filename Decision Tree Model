@@ -1,0 +1,22 @@
+#Decision Tree Model
+
+library(rpart)
+dtm=rpart(Training_points ~ .,Training_data, method = "class",  control=rpart.control(minsplit=30))
+
+pred=predict(dtm, Testing_data, type="prob")[,2]
+prediction=prediction(pred, Testing_data$Testing_points)
+prf <- performance(prediction, "tpr", "fpr")
+ROCR::plot(prf)
+
+auc <- performance(prediction, "auc")
+auc <- auc@y.values[[1]]
+auc
+
+####### Landslide Release Map Prediction in raster
+
+predictions=predict(Rasters_tested, dtm, fun=predict, type="prob", index=2)
+plot(predictions)
+
+## save raster image in TIFF format
+
+writeRaster(predictions,filename="RFfullinvent.tif",format="GTiff",overwrite=TRUE)
