@@ -1,0 +1,26 @@
+#Random Forest Model
+
+library(randomForest)
+fit <- randomForest(as.factor(Training_points ) ~ .,data=Training_data, importance=TRUE, ntree=1000)
+summary(fit)
+varImpPlot(fit)
+
+pred=predict(fit, Testing_data, type="prob")[,2]
+prediction=prediction(pred, Testing_data$Testing_points)
+prf <- performance(prediction, "tpr", "fpr")
+ROCR::plot(prf)
+
+auc <- performance(prediction, "auc")
+auc <- auc@y.values[[1]]
+auc
+
+####### Landslide Release Map Prediction in raster
+
+predictions=predict(Rasters_tested, fit, fun=predict, type="prob", index=2)
+plot(predictions)
+
+## save raster image in TIFF format
+
+writeRaster(predictions,filename="RFfullinvent.tif",format="GTiff",overwrite=TRUE)
+
+######## END
